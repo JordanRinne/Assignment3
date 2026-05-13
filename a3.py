@@ -1,9 +1,17 @@
-# a3.py
+# Jordan Rinne
+# jrinne@uci.edu
+# 16935997
 
-# Starter code for assignment 3 in ICS 32 Programming with Software Libraries in Python
 
-# Replace the following placeholders with your information.
 
-# NAME
-# EMAIL
-# STUDENT ID
+
+def main():
+    '''
+    The main function should call the send function with the appropriate arguments to send a message, bio, or both to the server.
+    '''
+    pass
+
+
+if __name__ == "__main__":
+    main()
+    

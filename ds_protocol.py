@@ -1,19 +1,13 @@
-# ds_protocol.py
-
-# Starter code for assignment 3 in ICS 32 Programming with Software Libraries in Python
-
-# Replace the following placeholders with your information.
-
-# NAME
-# EMAIL
-# STUDENT ID
+# Jordan Rinne
+# jrinne@uci.edu
+# 16935997
 
 import json
 from collections import namedtuple
 
 # Namedtuple to hold the values retrieved from json messages.
 # TODO: update this named tuple to use DSP protocol keys
-DataTuple = namedtuple('DataTuple', ['foo','baz'])
+DataTuple = namedtuple('DataTuple', ['type','message', 'token'])
 
 def extract_json(json_msg:str) -> DataTuple:
   '''
@@ -23,9 +17,65 @@ def extract_json(json_msg:str) -> DataTuple:
   '''
   try:
     json_obj = json.loads(json_msg)
-    foo = json_obj['foo']
-    baz = json_obj['bar']['baz']
+    type = json_obj['type']
+    message = json_obj['message']
+    token = json_obj['token']
   except json.JSONDecodeError:
     print("Json cannot be decoded.")
 
-  return DataTuple(foo, baz)
+  return DataTuple(type, message, token)
+
+
+def join_msg(username:str, password:str) -> str:
+  '''
+  Create a json string with the appropriate keys and values to join a ds server
+
+  :param username: The user name to be assigned to the message.
+  :param password: The password associated with the username.
+  '''
+  message = {
+    "join": {
+      "username": username,
+      "password": password,
+      "token": ""
+    }
+  }
+  return json.dumps(message)
+
+
+def post_msg(token:str, entry:str, timestamp:str) -> str:
+  '''
+  Create a json string with the appropriate keys and values to post a message to a ds server
+
+  :param token: The token associated with the user.
+  :param entry: The entry to be sent to the server.
+  :param timestamp: The timestamp associated with the entry.
+  '''
+
+  message = {
+    "token": token,
+    "post": {
+      "entry": entry,
+      "timestamp": timestamp
+    }
+  }
+  return json.dumps(message)
+
+
+def bio_msg(token:str, entry:str, timestamp:str) -> str:
+  '''
+  Create a json string with the appropriate keys and values to update a bio on a ds server
+
+  :param token: The token associated with the user.
+  :param entry: The entry to be updated on the server.
+  :param timestamp: The timestamp associated with the entry.
+  '''
+
+  message = {
+    "token": token,
+    "bio": {
+      "entry": entry,
+      "timestamp": timestamp
+    }
+  }
+  return json.dumps(message)
