@@ -382,8 +382,11 @@ def publish_post(user_input, profile, friendly=True):
         run_error("INPUT NUMBER ERROR")
         return False
     
+    user_input = user_input[0]
+    posts = profile.get_posts()
+
     if user_input == "-all":
-        posts = str(profile.get_posts())
+        posts = str(posts)
 
         published = ds_client.send(
             profile.dsuserver,
@@ -398,19 +401,24 @@ def publish_post(user_input, profile, friendly=True):
             return False
 
     elif user_input.isdigit():
-        index = user_input
-        post = posts[index] if 0 <= index < len(posts) else None
+        index = int(user_input)
+
+        if 0 <= index < len(posts):
+            post = posts[index]
+        else:
+            post = None
 
         published = ds_client.send(
             profile.dsuserver,
             3001,
             profile.username,
             profile.password,
-            post
+            post.entry
         )
         if published:
             return True
         else:
+            print("Server Error")
             return False
     else:
         run_error("INVALID INPUT")
@@ -474,6 +482,13 @@ def admin_mode():
 
         elif ans[0] == "P":
             print_profile(ans[1:], profile, friendly=False)
+
+        elif ans[0] == "PP":
+            success = publish_post(ans[1:], profile, friendly=True)
+            if success:
+                print("Success")
+            else:
+                print(": (")
 
         elif ans[0] == "help":
             print_help()

@@ -13,7 +13,7 @@ def main():
         ui.admin_mode()
     else:
         ui.main_ui(start)
-        
+
     return None
 
 
