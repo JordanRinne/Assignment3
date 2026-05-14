@@ -2,14 +2,19 @@
 # jrinne@uci.edu
 # 16935997
 
-
+import ui
 
 
 def main():
-    '''
-    The main function should call the send function with the appropriate arguments to send a message, bio, or both to the server.
-    '''
-    pass
+
+    start = input("Enter an input: ")
+
+    if start == "admin":
+        ui.admin_mode()
+    else:
+        ui.main_ui(start)
+        
+    return None
 
 
 if __name__ == "__main__":

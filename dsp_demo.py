@@ -7,13 +7,10 @@ import ds_client
 
 server = "127.0.0.1"
 port = 3001
+username = "jordan"
+password = "password123"
 
-result = ds_client.send(
-    server,
-    port,
-    "jordan",
-    "password123",
-    "Hello from Assignment 3!"
-)
-
-print(result)
+print(ds_client.send(server, port, username, password, "Test post only"))
+print(ds_client.send(server, port, username, password, "", "Test bio only"))
+print(ds_client.send(server, port, username, password, "Test post and bio", "Updated bio"))
+print(ds_client.send(server, port, "f21demo", "pwd123", "Hello World!"))

@@ -6,6 +6,7 @@
 import Profile as p
 from pathlib import Path
 import shlex
+import ds_client
 
 
 def parse(user_input):
@@ -152,13 +153,13 @@ def open_file(user_input, friendly=True):
 def create_profile(friendly=True):
 
     if friendly:
-        dsuserver = input("DsuServer: ")
+        #dsuserver = input("DsuServer: ")
         username = input("Username: ")
         password = input("Password: ")
         bio = input("Bio (optional): ")
     else:
-        print("DsuServer:")
-        dsuserver = input()
+        #print("DsuServer:")
+        #dsuserver = input()
         print("Username:")
         username = input()
         print("Password:")
@@ -169,11 +170,11 @@ def create_profile(friendly=True):
     if " " in username or " " in password:
         run_error("INVALID USR/PWD", friendly=friendly)
         return None
-    if not dsuserver or not username or not password:
+    if not username or not password:
         run_error("EMPTY PARAM", friendly=friendly)
         return None
 
-    profile = p.Profile(dsuserver, username, password)
+    profile = p.Profile("127.0.0.1", username, password)
     profile.bio = bio
     return profile
 
@@ -369,6 +370,11 @@ def print_help():
     )
     print("Q: Quit the program.")
     return None
+
+
+def publish_post(user_input, friendly=True):
+    pass
+
 
 
 def admin_mode():
