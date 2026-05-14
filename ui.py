@@ -153,13 +153,13 @@ def open_file(user_input, friendly=True):
 def create_profile(friendly=True):
 
     if friendly:
-        #dsuserver = input("DsuServer: ")
+        dsuserver = input("DsuServer: ")
         username = input("Username: ")
         password = input("Password: ")
         bio = input("Bio (optional): ")
     else:
-        #print("DsuServer:")
-        #dsuserver = input()
+        print("DsuServer:")
+        dsuserver = input()
         print("Username:")
         username = input()
         print("Password:")
@@ -170,11 +170,11 @@ def create_profile(friendly=True):
     if " " in username or " " in password:
         run_error("INVALID USR/PWD", friendly=friendly)
         return None
-    if not username or not password:
+    if not dsuserver or not username or not password:
         run_error("EMPTY PARAM", friendly=friendly)
         return None
 
-    profile = p.Profile("127.0.0.1", username, password)
+    profile = p.Profile(dsuserver, username, password)
     profile.bio = bio
     return profile
 
@@ -372,8 +372,50 @@ def print_help():
     return None
 
 
-def publish_post(user_input, friendly=True):
-    pass
+def publish_post(user_input, profile, friendly=True):
+
+    if profile is None:
+        run_error("PROFILE ERROR")
+        return False
+    
+    if len(user_input) != 1:
+        run_error("INPUT NUMBER ERROR")
+        return False
+    
+    if user_input == "-all":
+        posts = str(profile.get_posts())
+
+        published = ds_client.send(
+            profile.dsuserver,
+            3001,
+            profile.username,
+            profile.password,
+            posts
+        )
+        if published:
+            return True
+        else:
+            return False
+
+    elif user_input.isdigit():
+        index = user_input
+        post = posts[index] if 0 <= index < len(posts) else None
+
+        published = ds_client.send(
+            profile.dsuserver,
+            3001,
+            profile.username,
+            profile.password,
+            post
+        )
+        if published:
+            return True
+        else:
+            return False
+    else:
+        run_error("INVALID INPUT")
+        return False
+
 
 
 
