@@ -17,13 +17,15 @@ def extract_json(json_msg:str) -> DataTuple:
   '''
   try:
     json_obj = json.loads(json_msg)
-    type = json_obj['type']
-    message = json_obj['message']
-    token = json_obj['token']
+    response = json_obj['response']
+    response_type = response['type']
+    message = response.get('message', '')
+    token = response.get('token', '')
+
   except json.JSONDecodeError:
     print("Json cannot be decoded.")
 
-  return DataTuple(type, message, token)
+  return DataTuple(response_type, message, token)
 
 
 def join_msg(username:str, password:str) -> str:

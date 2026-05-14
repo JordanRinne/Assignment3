@@ -19,7 +19,7 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
   :param message: The message to be sent to the server.
   :param bio: Optional, a bio for the user.
   '''
-  
+
   try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
       s.connect((server, port))
@@ -28,10 +28,11 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
       recv_file = s.makefile('r')
 
       join = ds_protocol.join_msg(username, password)
-      send_file.write(join + '\n')
+      send_file.write(join + '\r\n')
       send_file.flush()
 
       response = recv_file.readline()
+      #print("JOIN RESPONSE:", response)
       response_data = ds_protocol.extract_json(response)
 
       if response_data.type != "ok":
@@ -39,7 +40,8 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
         return False
     
       token = response_data.token
-      timestamp = time.time()
+      #print("TOKEN:", token)
+      timestamp = str(time.time())
 
       if message is not None and message.strip() != "":
         post = ds_protocol.post_msg(token, message, timestamp)
@@ -47,14 +49,16 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
         send_file.flush()
 
         response = recv_file.readline()
+        #print("SERVER RESPONSE:", response)
+        
         response_data = ds_protocol.extract_json(response)
 
         if response_data.type != "ok":
-          print("Failed to post message.")
+          #print("Failed to post message.")
           return False
 
       if bio is not None and bio.strip() != "":
-        bio_msg = ds_protocol.bio_msg(token, bio)
+        bio_msg = ds_protocol.bio_msg(token, bio, timestamp)
         send_file.write(bio_msg + '\r\n')
         send_file.flush()
 
@@ -62,10 +66,10 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
         response_data = ds_protocol.extract_json(response)
 
         if response_data.type != "ok":
-          print("Failed to update bio.")
+          #print("Failed to update bio.")
           return False
 
       return True
   except Exception as ex:
-    print(f"An error occurred: {ex}")
+    #print(f"An error occurred: {ex}")
     return False
