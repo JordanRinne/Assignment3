@@ -1,10 +1,12 @@
-# Starter code for assignment 3 in ICS 32 Programming with Software Libraries in Python
+# Jordan Rinne
+# jrinne@uci.edu
+# 16935997
 
-# Replace the following placeholders with your information.
 
-# NAME
-# EMAIL
-# STUDENT ID
+import socket
+import ds_protocol
+import time
+
 
 def send(server:str, port:int, username:str, password:str, message:str, bio:str=None):
   '''
@@ -17,5 +19,53 @@ def send(server:str, port:int, username:str, password:str, message:str, bio:str=
   :param message: The message to be sent to the server.
   :param bio: Optional, a bio for the user.
   '''
-  #TODO: return either True or False depending on results of required operation
-  return 
+  
+  try:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+      s.connect((server, port))
+
+      send_file = s.makefile('w')
+      recv_file = s.makefile('r')
+
+      join = ds_protocol.join_msg(username, password)
+      send_file.write(join + '\n')
+      send_file.flush()
+
+      response = recv_file.readline()
+      response_data = ds_protocol.extract_json(response)
+
+      if response_data.type != "ok":
+        print("Failed to join server.")
+        return False
+    
+      token = response_data.token
+      timestamp = time.time()
+
+      if message is not None and message.strip() != "":
+        post = ds_protocol.post_msg(token, message, timestamp)
+        send_file.write(post + '\r\n')
+        send_file.flush()
+
+        response = recv_file.readline()
+        response_data = ds_protocol.extract_json(response)
+
+        if response_data.type != "ok":
+          print("Failed to post message.")
+          return False
+
+      if bio is not None and bio.strip() != "":
+        bio_msg = ds_protocol.bio_msg(token, bio)
+        send_file.write(bio_msg + '\r\n')
+        send_file.flush()
+
+        response = recv_file.readline()
+        response_data = ds_protocol.extract_json(response)
+
+        if response_data.type != "ok":
+          print("Failed to update bio.")
+          return False
+
+      return True
+  except Exception as ex:
+    print(f"An error occurred: {ex}")
+    return False
