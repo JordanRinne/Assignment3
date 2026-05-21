@@ -51,7 +51,11 @@ def run_error(error_type="UNKNOWN EXCEPTION", friendly=True):
         "EMPTY FILE": "Empty File. The file you are trying to open is empty"
         " and cannot be loaded as a profile.",
         "SERVER ERROR": "Server Error. An error occurred while trying to"
-        " send the post or bio to the server."
+        " send the post or bio to the server.",
+        "EMPTY BIO": "Empty Bio. The bio for this profile is empty and cannot"
+        " be published.",
+        "EMPTY POST": "Empty Post. The post you are trying to publish is empty"
+        " and cannot be published."
     }
 
     if error_type in messages:
@@ -374,77 +378,188 @@ def print_help():
     return None
 
 
-def publish_post(user_input, profile, friendly=True):
+def publish(user_input, profile, port=3001, friendly=True):
 
     if profile is None:
         run_error("PROFILE ERROR")
         return False
-    
-    if len(user_input) != 1:
+    if len(user_input) < 1:
         run_error("INPUT NUMBER ERROR")
         return False
-    
-    user_input = user_input[0]
+    if len(user_input) != 2 and user_input[0] not in ["-bio", "-help"]:
+        run_error("INPUT NUMBER ERROR")
+        return False
+
     posts = profile.get_posts()
 
-    if user_input == "-all":
-
-        for post in profile.get_posts():
-            post_text = post.entry
-            if post_text.strip() != "":
-                published = ds_client.send(
-                    profile.dsuserver,
-                    3001,
-                    profile.username,
-                    profile.password,
-                    post_text
-                )
-                if not published:
-                    run_error("SERVER ERROR")
-                    return False
-
+    if user_input[0] == "-help":
+        if len(user_input) != 1:
+            run_error("INPUT NUMBER ERROR")
+            return False
+        print("Available publish commands:")
+        print(
+            "-bio: Publish the bio of the profile to the server. The bio must"
+            " be non-empty to be published."
+        )
+        print(
+            "-post <index>: Publish the post at the specified index in the"
+            " profile to the server. The post must be non-empty to be published."
+        )
+        print(
+            "-post -all: Publish all posts in the profile to the server. Each"
+            " post must be non-empty to be published."
+        )
+        print(
+            "-both <index>: Publish both the bio and the post at the specified"
+            " index in the profile to the server. Both the bio and post must"
+            " be non-empty to be published."
+        )
+        print(
+            "-both -all: Publish both the bio and all posts in the profile to"
+            " the server. The bio and each post must be non-empty to be"
+            " published."
+        )
+        return True
+    elif user_input[0] == "-bio":
+        if len(user_input) != 1:
+            run_error("INPUT NUMBER ERROR")
+            return False
         bio_text = profile.bio
         if bio_text.strip() != "":
             published = ds_client.send(
                 profile.dsuserver,
-                3001,
+                port,
                 profile.username,
                 profile.password,
                 "",
                 bio_text
-            )
-            if not published:
-                run_error("SERVER ERROR")
-                return False
-        return True
-
-    elif user_input.isdigit():
-        index = int(user_input)
-
-        if 0 <= index < len(posts):
-            post = posts[index]
-        else:
-            run_error("INVALID INDEX")
-            return False
-        post_text = post.entry
-        if post_text.strip() != "":
-            published = ds_client.send(
-                profile.dsuserver,
-                3001,
-                profile.username,
-                profile.password,
-                post.entry
             )
             if published:
                 return True
             else:
                 run_error("SERVER ERROR")
                 return False
+        else:
+            run_error("EMPTY BIO")
+            return False
+    
+    elif user_input[0] == "-post":
+        if user_input[1] == "-all":
+            for post in posts:
+                post_text = post.entry
+                if post_text.strip() != "":
+                    published = ds_client.send(
+                        profile.dsuserver,
+                        port,
+                        profile.username,
+                        profile.password,
+                        post_text
+                    )
+                    if not published:
+                        run_error("SERVER ERROR")
+                        return False
+                else:
+                    run_error("EMPTY POST")
+                    return False
+            return True
+    
+        if not user_input[1].isdigit():
+            run_error("INDEX NUMBER ERROR")
+            return False
+        
+        index = int(user_input[1])
+        if 0 <= index < len(posts):
+            post = posts[index]
+        else:
+            run_error("INVALID INDEX")
+            return False
+        
+        post_text = post.entry
+        if post_text.strip() != "":
+            published = ds_client.send(
+                profile.dsuserver,
+                port,
+                profile.username,
+                profile.password,
+                post_text
+            )
+            if published:
+                return True
+            else:
+                run_error("SERVER ERROR")
+                return False
+        else:
+            run_error("EMPTY POST")
+            return False
+
+    elif user_input[0] == "-both":
+        if user_input[1] == "-all":
+            for post in profile.get_posts():
+                post_text = post.entry
+                if post_text.strip() != "":
+                    published = ds_client.send(
+                        profile.dsuserver,
+                        port,
+                        profile.username,
+                        profile.password,
+                        post_text
+                    )
+                    if not published:
+                        run_error("SERVER ERROR")
+                        return False
+                else:
+                    run_error("EMPTY POST")
+                    return False
+            bio_text = profile.bio
+            if bio_text.strip() != "":
+                published = ds_client.send(
+                    profile.dsuserver,
+                    port,
+                    profile.username,
+                    profile.password,
+                    "",
+                    bio_text
+                )
+                if not published:
+                    run_error("SERVER ERROR")
+                    return False
+            else:
+                run_error("EMPTY BIO")
+                return False
+            return True
+        
+        if not user_input[1].isdigit():
+            run_error("INDEX NUMBER ERROR")
+            return False
+        
+        index = int(user_input[1])
+        if 0 <= index < len(posts):
+            post = posts[index]
+            post_text = post.entry
+            bio_text = profile.bio
+            if post_text.strip() != "" and bio_text.strip() != "":
+                published = ds_client.send(
+                    profile.dsuserver,
+                    port,
+                    profile.username,
+                    profile.password,
+                    post_text,
+                    bio_text
+                )
+                if published:
+                    return True
+                else:
+                    run_error("SERVER ERROR")
+                    return False
+            elif bio_text.strip() == "":
+                run_error("EMPTY BIO")
+                return False
+            else:
+                run_error("EMPTY POST")
+                return False
     else:
-        run_error("INVALID INPUT")
+        run_error("INVALID INPUT (PB)")
         return False
-
-
 
 
 def admin_mode():
@@ -503,12 +618,10 @@ def admin_mode():
         elif ans[0] == "P":
             print_profile(ans[1:], profile, friendly=False)
 
-        elif ans[0] == "PP":
-            success = publish_post(ans[1:], profile, friendly=True)
+        elif ans[0] == "PB":
+            success = publish(ans[1:], profile, friendly=True)
             if success:
                 print("Success")
-            else:
-                run_error("SERVER ERROR")
 
         elif ans[0] == "help":
             print_help()
