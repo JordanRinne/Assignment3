@@ -49,7 +49,9 @@ def run_error(error_type="UNKNOWN EXCEPTION", friendly=True):
         "INVALID INDEX": "Invalid Index. Ensure that the index you provided"
         " is a valid integer and corresponds to an existing post.",
         "EMPTY FILE": "Empty File. The file you are trying to open is empty"
-        " and cannot be loaded as a profile."
+        " and cannot be loaded as a profile.",
+        "SERVER ERROR": "Server Error. An error occurred while trying to"
+        " send the post or bio to the server."
     }
 
     if error_type in messages:
@@ -386,19 +388,35 @@ def publish_post(user_input, profile, friendly=True):
     posts = profile.get_posts()
 
     if user_input == "-all":
-        posts = str(posts)
 
-        published = ds_client.send(
-            profile.dsuserver,
-            3001,
-            profile.username,
-            profile.password,
-            posts
-        )
-        if published:
-            return True
-        else:
-            return False
+        for post in profile.get_posts():
+            post_text = post.entry
+            if post_text.strip() != "":
+                published = ds_client.send(
+                    profile.dsuserver,
+                    3001,
+                    profile.username,
+                    profile.password,
+                    post_text
+                )
+                if not published:
+                    run_error("SERVER ERROR")
+                    return False
+
+        bio_text = profile.bio
+        if bio_text.strip() != "":
+            published = ds_client.send(
+                profile.dsuserver,
+                3001,
+                profile.username,
+                profile.password,
+                "",
+                bio_text
+            )
+            if not published:
+                run_error("SERVER ERROR")
+                return False
+        return True
 
     elif user_input.isdigit():
         index = int(user_input)
@@ -406,20 +424,22 @@ def publish_post(user_input, profile, friendly=True):
         if 0 <= index < len(posts):
             post = posts[index]
         else:
-            post = None
-
-        published = ds_client.send(
-            profile.dsuserver,
-            3001,
-            profile.username,
-            profile.password,
-            post.entry
-        )
-        if published:
-            return True
-        else:
-            print("Server Error")
+            run_error("INVALID INDEX")
             return False
+        post_text = post.entry
+        if post_text.strip() != "":
+            published = ds_client.send(
+                profile.dsuserver,
+                3001,
+                profile.username,
+                profile.password,
+                post.entry
+            )
+            if published:
+                return True
+            else:
+                run_error("SERVER ERROR")
+                return False
     else:
         run_error("INVALID INPUT")
         return False
@@ -488,7 +508,7 @@ def admin_mode():
             if success:
                 print("Success")
             else:
-                print(": (")
+                run_error("SERVER ERROR")
 
         elif ans[0] == "help":
             print_help()
