@@ -7,12 +7,14 @@ import ui
 
 def main():
 
-    start = input("Enter an input: ")
+    start = input("Enter 'new' to create a new profile, or 'open' to load an existing one: ")
 
     if start == "admin":
         ui.admin_mode()
     else:
         ui.main_ui(start)
+        print("Exiting program. Goodbye!")
+        print()
 
     return None
 

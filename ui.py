@@ -25,7 +25,9 @@ def run_error(error_type="UNKNOWN EXCEPTION", friendly=True):
     messages = {
         "INVALID COMMAND": "Invalid Command. Use 'C' to create a file,"
         " 'D' to delete a file, 'R' to read a file, 'O' to open a file,"
-        " 'E' to edit a profile, or 'P' to print profile information.",
+        " 'E' to edit a profile, 'P' to print profile information, PB"
+        " to publish profile information to the server, or 'Q' to quit"
+        " the program.",
         "INVALID COMMAND (E)": "Invalid Edit Command. Use '-usr' to edit"
         " username, '-pwd' to edit password, '-bio' to edit bio,"
         " '-addpost' to add a post, or '-delpost' to delete a post.",
@@ -55,7 +57,11 @@ def run_error(error_type="UNKNOWN EXCEPTION", friendly=True):
         "EMPTY BIO": "Empty Bio. The bio for this profile is empty and cannot"
         " be published.",
         "EMPTY POST": "Empty Post. The post you are trying to publish is empty"
-        " and cannot be published."
+        " and cannot be published.",
+        "INVALID INPUT (PB)": "Invalid Publish Command. Use '-bio' to publish"
+        " the bio, '-post <index>' to publish a specific post, '-post -all' to"
+        " publish all posts, '-both <index>' to publish both the bio and a"
+        " specific post, or '-both -all' to publish both the bio and all posts."
     }
 
     if error_type in messages:
@@ -380,21 +386,16 @@ def print_help():
 
 def publish(user_input, profile, port=3001, friendly=True):
 
-    if profile is None:
-        run_error("PROFILE ERROR")
-        return False
     if len(user_input) < 1:
-        run_error("INPUT NUMBER ERROR")
+        run_error("INPUT NUMBER ERROR", friendly=friendly)
         return False
     if len(user_input) != 2 and user_input[0] not in ["-bio", "-help"]:
-        run_error("INPUT NUMBER ERROR")
+        run_error("INPUT NUMBER ERROR", friendly=friendly)
         return False
-
-    posts = profile.get_posts()
 
     if user_input[0] == "-help":
         if len(user_input) != 1:
-            run_error("INPUT NUMBER ERROR")
+            run_error("INPUT NUMBER ERROR", friendly=friendly)
             return False
         print("Available publish commands:")
         print(
@@ -420,11 +421,17 @@ def publish(user_input, profile, port=3001, friendly=True):
             " published."
         )
         return True
-    elif user_input[0] == "-bio":
+    
+    if profile is None:
+        run_error("PROFILE ERROR", friendly=friendly)
+        return False
+    posts = profile.get_posts()
+    
+    if user_input[0] == "-bio":
         if len(user_input) != 1:
-            run_error("INPUT NUMBER ERROR")
+            run_error("INPUT NUMBER ERROR", friendly=friendly)
             return False
-        bio_text = profile.bio
+        bio_text = profile.bio or ""
         if bio_text.strip() != "":
             published = ds_client.send(
                 profile.dsuserver,
@@ -437,14 +444,19 @@ def publish(user_input, profile, port=3001, friendly=True):
             if published:
                 return True
             else:
-                run_error("SERVER ERROR")
+                run_error("SERVER ERROR", friendly=friendly)
                 return False
         else:
-            run_error("EMPTY BIO")
+            run_error("EMPTY BIO", friendly=friendly)
             return False
     
     elif user_input[0] == "-post":
         if user_input[1] == "-all":
+
+            if len(posts) == 0:
+                run_error("EMPTY POST", friendly=friendly)
+                return False
+
             for post in posts:
                 post_text = post.entry
                 if post_text.strip() != "":
@@ -456,22 +468,22 @@ def publish(user_input, profile, port=3001, friendly=True):
                         post_text
                     )
                     if not published:
-                        run_error("SERVER ERROR")
+                        run_error("SERVER ERROR", friendly=friendly)
                         return False
                 else:
-                    run_error("EMPTY POST")
+                    run_error("EMPTY POST", friendly=friendly)
                     return False
             return True
     
         if not user_input[1].isdigit():
-            run_error("INDEX NUMBER ERROR")
+            run_error("INDEX NUMBER ERROR", friendly=friendly)
             return False
         
         index = int(user_input[1])
         if 0 <= index < len(posts):
             post = posts[index]
         else:
-            run_error("INVALID INDEX")
+            run_error("INVALID INDEX", friendly=friendly)
             return False
         
         post_text = post.entry
@@ -486,10 +498,10 @@ def publish(user_input, profile, port=3001, friendly=True):
             if published:
                 return True
             else:
-                run_error("SERVER ERROR")
+                run_error("SERVER ERROR", friendly=friendly)
                 return False
         else:
-            run_error("EMPTY POST")
+            run_error("EMPTY POST", friendly=friendly)
             return False
 
     elif user_input[0] == "-both":
@@ -505,12 +517,12 @@ def publish(user_input, profile, port=3001, friendly=True):
                         post_text
                     )
                     if not published:
-                        run_error("SERVER ERROR")
+                        run_error("SERVER ERROR", friendly=friendly)
                         return False
                 else:
-                    run_error("EMPTY POST")
+                    run_error("EMPTY POST", friendly=friendly)
                     return False
-            bio_text = profile.bio
+            bio_text = profile.bio or ""
             if bio_text.strip() != "":
                 published = ds_client.send(
                     profile.dsuserver,
@@ -521,22 +533,22 @@ def publish(user_input, profile, port=3001, friendly=True):
                     bio_text
                 )
                 if not published:
-                    run_error("SERVER ERROR")
+                    run_error("SERVER ERROR", friendly=friendly)
                     return False
             else:
-                run_error("EMPTY BIO")
+                run_error("EMPTY BIO", friendly=friendly)
                 return False
             return True
         
         if not user_input[1].isdigit():
-            run_error("INDEX NUMBER ERROR")
+            run_error("INDEX NUMBER ERROR", friendly=friendly)
             return False
         
         index = int(user_input[1])
         if 0 <= index < len(posts):
             post = posts[index]
             post_text = post.entry
-            bio_text = profile.bio
+            bio_text = profile.bio or ""
             if post_text.strip() != "" and bio_text.strip() != "":
                 published = ds_client.send(
                     profile.dsuserver,
@@ -549,16 +561,19 @@ def publish(user_input, profile, port=3001, friendly=True):
                 if published:
                     return True
                 else:
-                    run_error("SERVER ERROR")
+                    run_error("SERVER ERROR", friendly=friendly)
                     return False
             elif bio_text.strip() == "":
-                run_error("EMPTY BIO")
+                run_error("EMPTY BIO", friendly=friendly)
                 return False
             else:
-                run_error("EMPTY POST")
+                run_error("EMPTY POST", friendly=friendly)
                 return False
+        else:
+            run_error("INVALID INDEX", friendly=friendly)
+            return False
     else:
-        run_error("INVALID INPUT (PB)")
+        run_error("INVALID INPUT (PB)", friendly=friendly)
         return False
 
 
@@ -619,9 +634,7 @@ def admin_mode():
             print_profile(ans[1:], profile, friendly=False)
 
         elif ans[0] == "PB":
-            success = publish(ans[1:], profile, friendly=True)
-            if success:
-                print("Success")
+            publish(ans[1:], profile, friendly=False)  
 
         elif ans[0] == "help":
             print_help()
@@ -731,6 +744,7 @@ def main_ui(start):
         print("Read a profile (type R)")
         print("Edit a profile (type E)")
         print("Print profile information (type P)")
+        print("Publish profile information to server (type PB)")
         print("Quit the program (type Q)")
         print()
         ans = input("What would you like to do? ")
@@ -862,6 +876,30 @@ def main_ui(start):
             else:
                 run_error("INVALID COMMAND (P)")
                 continue
+        elif ans.lower() == "pb":
+            publish_command = input(
+                "Enter a publish command (type 'help'"
+                " for a list of possible publish commands): "
+            )
+            print()
+            if not publish_command:
+                run_error("INPUT NUMBER ERROR")
+                continue
+            if publish_command == "help":
+                print()
+                publish(["-help"], profile)
+                continue
+            try:
+                success = publish(shlex.split(publish_command), profile)
+                if success:
+                    print("Your Profile Information was Published Successfully.")
+                else:
+                    print("Publish Failed.")
+            except Exception:
+                run_error("INVALID INPUT (PB)")
+                continue
+            
+            
         else:
             run_error("INVALID COMMAND")
     return None
