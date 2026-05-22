@@ -1,3 +1,8 @@
+# Jordan Rinne
+# jrinne@uci.edu
+# 16935997
+
+
 # Profile.py
 #
 # ICS 32

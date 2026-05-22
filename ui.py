@@ -515,38 +515,54 @@ def publish(user_input, profile, port=3001, friendly=True):
 
     elif user_input[0] == "-both":
         if user_input[1] == "-all":
-            for post in profile.get_posts():
-                post_text = post.entry
-                if post_text.strip() != "":
-                    published = ds_client.send(
-                        profile.dsuserver,
-                        port,
-                        profile.username,
-                        profile.password,
-                        post_text
-                    )
-                    if not published:
-                        run_error("SERVER ERROR", friendly=friendly)
-                        return False
-                else:
+
+            if len(posts) == 0:
+                run_error("EMPTY POST", friendly=friendly)
+                return False
+
+            bio_text = profile.bio or ""
+
+            if bio_text.strip() == "":
+                run_error("EMPTY BIO", friendly=friendly)
+                return False
+
+            post_texts = []
+
+            for post in posts:
+                post_text = post.entry or ""
+
+                if post_text.strip() == "":
                     run_error("EMPTY POST", friendly=friendly)
                     return False
-            bio_text = profile.bio or ""
-            if bio_text.strip() != "":
+
+                post_texts.append(post_text)
+
+            published = ds_client.send(
+                profile.dsuserver,
+                port,
+                profile.username,
+                profile.password,
+                post_texts[0],
+                bio_text
+            )
+
+            if not published:
+                run_error("SERVER ERROR", friendly=friendly)
+                return False
+
+            for post_text in post_texts[1:]:
                 published = ds_client.send(
                     profile.dsuserver,
                     port,
                     profile.username,
                     profile.password,
-                    "",
-                    bio_text
+                    post_text
                 )
+
                 if not published:
                     run_error("SERVER ERROR", friendly=friendly)
                     return False
-            else:
-                run_error("EMPTY BIO", friendly=friendly)
-                return False
+
             return True
         
         if not user_input[1].isdigit():
@@ -887,8 +903,8 @@ def main_ui(start):
                 continue
         elif ans.lower() == "pb":
             publish_command = input(
-                "Enter a publish command (type 'help'"
-                " for a list of possible publish commands): "
+                "Enter a publish command (-bio, -post <index>, -post"
+                " -all, -both <index>, -both -all, or help): "
             )
             print()
             if not publish_command:
