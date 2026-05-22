@@ -63,9 +63,13 @@ def run_error(error_type="UNKNOWN EXCEPTION", friendly=True):
         " publish all posts, '-both <index>' to publish both the bio and a"
         " specific post, or '-both -all' to publish both the bio and all posts."
     }
+    if error_type == "SERVER ERROR":
+        print(f"{messages[error_type]} Check your network connection and server status, and try again.")
+        return None
 
     if error_type in messages:
         print(f"{messages[error_type]} Check your input and try again.")
+        return None
     else:
         print("UNKNOWN EXCEPTION: An unknown error occurred.")
 
@@ -421,12 +425,17 @@ def publish(user_input, profile, port=3001, friendly=True):
             " published."
         )
         return True
-    
+
     if profile is None:
         run_error("PROFILE ERROR", friendly=friendly)
         return False
+
+    if profile.dsuserver is None or profile.dsuserver.strip() == "":
+        run_error("SERVER ERROR", friendly=friendly)
+        return False
+
     posts = profile.get_posts()
-    
+
     if user_input[0] == "-bio":
         if len(user_input) != 1:
             run_error("INPUT NUMBER ERROR", friendly=friendly)
@@ -702,11 +711,11 @@ def main_ui(start):
                 " use any of the following actions:"
             )
             break
-        elif ans[0] == "open":
+        elif ans[0] == "load":
             print()
             name = input(
                 "Enter the name of the profile you would like"
-                " to open (without .dsu extension): "
+                " to load (without .dsu extension): "
             )
             print()
             file_path = input(
@@ -732,7 +741,7 @@ def main_ui(start):
         else:
             print()
             ans = parse(input(
-                "Enter 'new' to create a new profile or 'open' to load"
+                "Enter 'new' to create a new profile or 'load' to load"
                 " an existing profile: (or Q to quit): "
             ))
 
