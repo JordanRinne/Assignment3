@@ -7,7 +7,10 @@ import ui
 
 def main():
 
-    start = input("Enter 'new' to create a new profile, or 'load' to load an existing one: ")
+    start = input(
+        "Enter 'new' to create a new profile, or 'load' to"
+        " load an existing one: "
+    ).lower()
 
     if start == "admin":
         ui.admin_mode()

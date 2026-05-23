@@ -61,10 +61,14 @@ def run_error(error_type="UNKNOWN EXCEPTION", friendly=True):
         "INVALID INPUT (PB)": "Invalid Publish Command. Use '-bio' to publish"
         " the bio, '-post <index>' to publish a specific post, '-post -all' to"
         " publish all posts, '-both <index>' to publish both the bio and a"
-        " specific post, or '-both -all' to publish both the bio and all posts."
+        " specific post, or '-both -all' to publish both the bio and"
+        " all posts."
     }
     if error_type == "SERVER ERROR":
-        print(f"{messages[error_type]} Check your network connection and server status, and try again.")
+        print(
+            f"{messages[error_type]} Check your network connection and"
+            " server status, and try again."
+        )
         return None
 
     if error_type in messages:
@@ -408,7 +412,8 @@ def publish(user_input, profile, port=3001, friendly=True):
         )
         print(
             "-post <index>: Publish the post at the specified index in the"
-            " profile to the server. The post must be non-empty to be published."
+            " profile to the server. The post must be non-empty to be"
+            " published."
         )
         print(
             "-post -all: Publish all posts in the profile to the server. Each"
@@ -458,7 +463,7 @@ def publish(user_input, profile, port=3001, friendly=True):
         else:
             run_error("EMPTY BIO", friendly=friendly)
             return False
-    
+
     elif user_input[0] == "-post":
         if user_input[1] == "-all":
 
@@ -483,18 +488,18 @@ def publish(user_input, profile, port=3001, friendly=True):
                     run_error("EMPTY POST", friendly=friendly)
                     return False
             return True
-    
+
         if not user_input[1].isdigit():
             run_error("INDEX NUMBER ERROR", friendly=friendly)
             return False
-        
+
         index = int(user_input[1])
         if 0 <= index < len(posts):
             post = posts[index]
         else:
             run_error("INVALID INDEX", friendly=friendly)
             return False
-        
+
         post_text = post.entry
         if post_text.strip() != "":
             published = ds_client.send(
@@ -564,11 +569,11 @@ def publish(user_input, profile, port=3001, friendly=True):
                     return False
 
             return True
-        
+
         if not user_input[1].isdigit():
             run_error("INDEX NUMBER ERROR", friendly=friendly)
             return False
-        
+
         index = int(user_input[1])
         if 0 <= index < len(posts):
             post = posts[index]
@@ -659,7 +664,7 @@ def admin_mode():
             print_profile(ans[1:], profile, friendly=False)
 
         elif ans[0] == "PB":
-            publish(ans[1:], profile, friendly=False)  
+            publish(ans[1:], profile, friendly=False)
 
         elif ans[0] == "help":
             print_help()
@@ -917,14 +922,14 @@ def main_ui(start):
             try:
                 success = publish(shlex.split(publish_command), profile)
                 if success:
-                    print("Your Profile Information was Published Successfully.")
+                    print(
+                        "Your Profile Information was Published Successfully."
+                    )
                 else:
                     print("Publish Failed.")
             except Exception:
                 run_error("INVALID INPUT (PB)")
                 continue
-            
-            
         else:
             run_error("INVALID COMMAND")
     return None
